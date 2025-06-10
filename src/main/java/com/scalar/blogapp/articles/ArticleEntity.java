@@ -8,10 +8,12 @@ import org.hibernate.Hibernate;
 import org.springframework.data.annotation.CreatedDate;
 import java.util.Date;
 import java.util.Objects;
+@Builder
 @Getter
 @Setter
 @ToString
 @RequiredArgsConstructor
+@AllArgsConstructor
 @Entity
 public class ArticleEntity {
     @Id
