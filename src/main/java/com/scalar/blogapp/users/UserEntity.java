@@ -5,6 +5,7 @@ import lombok.*;
 
 @Builder
 @AllArgsConstructor
+@NoArgsConstructor
 @Getter
 @Setter
 @ToString
@@ -26,4 +27,7 @@ public class UserEntity {
 
     @Column(nullable = true)
     private String image;
+
+    @Column(nullable = false)
+    private String password;
 }

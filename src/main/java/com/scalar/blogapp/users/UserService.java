@@ -14,7 +14,7 @@ public class UserService {
     public UserEntity createUser(UserDTO ud) {
         var newUser = UserEntity.builder()
                 .username(ud.getUsername())
-                // .password(password) // TODO: encrypt password
+                .password(ud.getPassword())// TODO: encrypt password
                 .email(ud.getEmail())
                 .build();
         return userRepository.save(newUser);
@@ -28,6 +28,8 @@ public class UserService {
         var user = userRepository.findByUsername(username);
         if (user == null) {
             throw new UserNotFoundException(username);
+        } if (!user.getPassword().equals(password)) {
+            throw new UserNotFoundException("Incorrect password for user: " + username);
         }
         return user;
     }
