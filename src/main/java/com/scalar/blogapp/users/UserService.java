@@ -1,21 +1,26 @@
 package com.scalar.blogapp.users;
-import com.scalar.blogapp.users.UserDTO;
+
+import com.scalar.blogapp.security.JWTService;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Service
 public class UserService {
-    private final UserRepository userRepository;
 
-    // ✅ Constructor name should match the class name
-    public UserService(UserRepository userRepository) {
+    private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
+
+    public UserService(UserRepository userRepository,
+                       PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
-    public UserEntity createUser(UserDTO ud) {
-        var newUser = UserEntity.builder()
-                .username(ud.getUsername())
-                .password(ud.getPassword())// TODO: encrypt password
-                .email(ud.getEmail())
+    public UserEntity createUser(UserDTO dto) {
+        UserEntity newUser = UserEntity.builder()
+                .username(dto.getUsername())
+                .password(passwordEncoder.encode(dto.getPassword()))
+                .email(dto.getEmail())
                 .build();
         return userRepository.save(newUser);
     }
@@ -24,20 +29,31 @@ public class UserService {
         return userRepository.findByUsername(username);
     }
 
-    public UserEntity loginUser(String username, String password) throws UserNotFoundException {
-        var user = userRepository.findByUsername(username);
+    public UserEntity loginUser(String username, String rawPassword)
+            throws UserNotFoundException, InvalidCredentialsException {
+
+        UserEntity user = userRepository.findByUsername(username);
+
         if (user == null) {
             throw new UserNotFoundException(username);
-        } if (!user.getPassword().equals(password)) {
-            throw new UserNotFoundException("Incorrect password for user: " + username);
         }
+
+        if (!passwordEncoder.matches(rawPassword, user.getPassword())) {
+            throw new InvalidCredentialsException("Incorrect password for user: " + username);
+        }
+
         return user;
     }
 
-    // ✅ Move the exception class outside or make it static
-    public static class UserNotFoundException extends IllegalAccessException {
+    public static class UserNotFoundException extends Exception {
         public UserNotFoundException(String username) {
             super("User '" + username + "' not found");
+        }
+    }
+
+    public static class InvalidCredentialsException extends Exception {
+        public InvalidCredentialsException(String message) {
+            super(message);
         }
     }
 }
